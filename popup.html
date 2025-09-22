@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Facebook Post Extension</title>
+    <style>
+        body {
+            width: 250px;
+            padding: 15px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .header h2 {
+            color: #1877f2;
+            margin: 0;
+            font-size: 16px;
+        }
+        .status {
+            background: #e8f5e8;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            color: #2d5a2d;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        button {
+            background: #1877f2;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        button:hover {
+            background: #166fe5;
+        }
+        .info {
+            font-size: 12px;
+            color: #65676b;
+            text-align: center;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>FB Post Extension</h2>
+    </div>
+    
+    <div class="status">
+        ✓ Extension is active
+    </div>
+    
+    <div class="info">
+        Icons will appear on Facebook posts automatically
+    </div>
+    
+    <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+{
+    "manifest_version": 3,
+    "name": "Add Reporter",
+    "version": "1.0",
+    "permissions": [
+        "scripting",
+        "activeTab",
+        "storage"
+    ],
+    "action": {
+        "default_popup": "popup.html",
+        "default_icon": "icon.png"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "*://www.facebook.com/*",
+                "*://www.instagram.com/*",
+                "*://*.fb.com/*"
+            ],
+            "js": [
+                "content.js"
+            ],
+            "css": [
+                "styles.css"
+            ],
+            "run_at": "document_end",
+            "all_frames": true
+        }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "icon.png",
+                "styles.css"
+            ],
+            "matches": [
+                "*://www.facebook.com/*",
+                "*://www.instagram.com/*",
+                "*://*.fb.com/*"
+            ]
+        }
+    ],
+    "background": {
+        "service_worker": "background.js",
+        "type": "module"
+    },
+    "options_page": "options.html",
+    "host_permissions": [
+        "*://www.facebook.com/*",
+        "*://www.instagram.com/*",
+        "https://dnrcunwfqwwimnyqrusj.supabase.co/*"
+    ]
+}
