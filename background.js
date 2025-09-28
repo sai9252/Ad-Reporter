@@ -14,29 +14,23 @@ chrome.runtime.onInstalled.addListener(() => {
 
 
 // Handle messages from content script
-chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
-    if (request.action === 'iconClicked') {
-        console.log('Icon clicked on post:', request.postContent);
-
-        // You can add additional background processing here
-        // For example: analytics, API calls, etc.
-
-        sendResponse({ success: true });
-    }
-    if (request.action === "saveLink" && request.link) {
-        const { data, error } = await supabase
-            .from("Link")
-            .insert([{ url: request.link }]);
-        if (error) {
-            sendResponse({ success: false, error });
-        } else {
-            sendResponse({ success: true, data });
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    (async () => {
+        if (request.action === "saveLink" && request.link) {
+            const { data, error } = await supabase
+                .from("Link")
+                .insert([{ url: request.link }]);
+            if (error) {
+                sendResponse({ success: false, error });
+            } else {
+                sendResponse({ success: true, data });
+            }
         }
-        return {
-            success: true
-        };
-    }
+    })();
+    // *** This is CRUCIAL ***
+    return true;
 });
+
 
 
 

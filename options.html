@@ -4,8 +4,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Reporter</title>
+    <script src="https://accounts.google.com/gsi/client" async></script>
+    <script>
+        function handleCredentialResponse(response) {
+            // Handle authentication response here (send to backend or use JWT)
+            alert("Google Login successful! ID Token: " + response.credential);
+        }
+    </script>
+    <style>
+        .important-note {
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            padding: 15px 10px;
+            margin-bottom: 16px;
+            border-radius: 4px;
+            font-size: 15px;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+    </style>
 </head>
 <body>
-    Hello
+    <div class="important-note">
+        <b>Important:</b> Signing in with Google is required for secure access.<br>
+        Make sure you trust this application before proceeding with Google Login.
+    </div>
+
+    <div id="g_id_onload"
+         data-client_id="YOUR_GOOGLE_CLIENT_ID"
+         data-callback="handleCredentialResponse"
+         data-auto_prompt="false">
+    </div>
+    <div class="g_id_signin"
+         data-type="standard"
+         data-size="large"
+         data-theme="outline"
+         data-text="sign_in_with"
+         data-shape="rectangular"
+         data-logo_alignment="left">
+    </div>
+
+    <p>Hello</p>
 </body>
 </html>

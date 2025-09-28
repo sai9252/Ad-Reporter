@@ -1,6 +1,7 @@
 // Facebook Post Header Extension - Modified for Sequential Clicking and Iframe Extraction
 console.log('Facebook Post Header Extension loaded');
 
+
 class FacebookPostHeaderExtension {
     constructor() {
         // --- CONFIGURATION ---
@@ -20,6 +21,24 @@ class FacebookPostHeaderExtension {
 
         this.init();
     }
+
+    waitForChromeAPI() {
+        return new Promise((resolve) => {
+            if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+                resolve();
+            } else {
+                const checkChrome = () => {
+                    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+                        resolve();
+                    } else {
+                        setTimeout(checkChrome, 100);
+                    }
+                };
+                checkChrome();
+            }
+        });
+    }
+
 
     /**
      * Initializes the script once the document is ready.
@@ -65,10 +84,11 @@ class FacebookPostHeaderExtension {
         // Create the icon container
         const iconWrapper = document.createElement('div');
         iconWrapper.className = 'fb-extension-icon';
-        iconWrapper.style.display = 'flex';
-        iconWrapper.style.alignItems = 'center';
-        iconWrapper.style.justifyItems = "center"
-        iconWrapper.style.marginRight = '25px';
+        iconWrapper.style.position = 'absolute';
+        iconWrapper.style.top = '0';
+        iconWrapper.style.marginRight = '30px';
+        iconWrapper.style.marginTop = '2px';
+        
 
         // Create the button
         const iconButton = document.createElement('button');
@@ -76,7 +96,7 @@ class FacebookPostHeaderExtension {
         // iconButton.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="white">
         //     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
         // </svg>`;
-        iconButton.innerHTML = "R"
+        iconButton.innerHTML = "R";
 
         // Add click event to perform sequential clicks and extract iframe
         iconButton.addEventListener('click', async (e) => {
@@ -98,18 +118,23 @@ class FacebookPostHeaderExtension {
      */
     async performSequentialActions(e) {
         try {
+            await this.waitForChromeAPI();
+        } catch (error) {
+            console.error('Error during wait for chrome:', error);
+        }
+
+        try {
             // Step 1: Click first selector
-            const parentEle1 = e.target.parentElement
-            const parentEle = parentEle1.parentElement
-            console.log(parentEle)
+            const parentEle1 = e.target.parentElement;
+            const parentEle = parentEle1.parentElement;
+            console.log(parentEle);
             const firstElement = parentEle.firstElementChild.firstElementChild;
             if (firstElement) {
-                console.log(firstElement)
+                console.log(firstElement);
                 const realClick = new MouseEvent('click', { bubbles: true, cancelable: true, view: window });
                 firstElement.dispatchEvent(realClick);
                 console.log('Clicked first element');
                 this.showNotification('Step 1 completed', 'success');
-
                 await this.delay(1000);
 
                 // Wait for menu to appear after the click before this search
@@ -123,6 +148,7 @@ class FacebookPostHeaderExtension {
                         hideAdElement = el;
                     }
                 });
+
                 if (hideAdElement) {
                     console.log('Found Hide ad element:', hideAdElement);
 
@@ -152,14 +178,22 @@ class FacebookPostHeaderExtension {
                         // Find iframe with class "xl1xv1r" and get its src attribute
                         const iframe = document.querySelector('iframe');
                         if (iframe && iframe.src) {
-                            // alert( iframe.src);
-                            // await navigator.clipboard.writeText(iframe.src);
-                            // console.log('Iframe src copied to clipboard!');
                             chrome.runtime.sendMessage({ action: "saveLink", link: iframe.src }, response => {
                                 if (response.success) {
                                     console.log("Saved to Supabase!");
                                 }
                             });
+
+                            // --- NEW: After success, click at specific screen position ---
+                            setTimeout(() => {
+                                const clickEvent = new MouseEvent('click', {
+                                    bubbles: true,
+                                    cancelable: true,
+                                    clientX: 50, // X Coordinate
+                                    clientY: 50  // Y Coordinate
+                                });
+                                document.elementFromPoint(50, 50)?.dispatchEvent(clickEvent);
+                            }, 500); // adjust delay if needed
                         } else {
                             alert('Iframe with class "xl1xv1r" not found or missing src.');
                         }
@@ -169,42 +203,12 @@ class FacebookPostHeaderExtension {
                 } else {
                     alert('This was not an ad Post');
                     // Or use: this.showNotification('This was not an ad message', 'error');
+                    // --- NEW: Retry by clicking firstElement again ---
+                    setTimeout(() => {
+                        const retryClick = new MouseEvent('click', { bubbles: true, cancelable: true, view: window });
+                        firstElement.dispatchEvent(retryClick);
+                    }, 500); // Retry click after short delay
                 }
-
-
-
-                // Step 2: Click second selector
-                // const secondElement = document.querySelector(this.SELECTOR_PATHS.second);
-                // if (secondElement) {
-                //     secondElement.click();
-                //     console.log('Clicked second element');
-                //     this.showNotification('Step 2 completed', 'success');
-
-                //     await this.delay(2000);
-
-                //     // Step 3: Extract iframe src
-                //     const iframe = document.querySelector(this.SELECTOR_PATHS.iframe);
-                //     if (iframe && iframe.src) {
-                //         const iframeSrc = iframe.src;
-                //         console.log('Extracted iframe src:', iframeSrc);
-                //         this.showIframeSrcPopup(iframeSrc);
-                //     } else {
-                //         this.showNotification('Iframe not found or has no src', 'error');
-
-                //         // Fallback: try to find any iframe that might have appeared
-                //         const allIframes = document.querySelectorAll('iframe');
-                //         if (allIframes.length > 0) {
-                //             for (let i = 0; i < allIframes.length; i++) {
-                //                 if (allIframes[i].src) {
-                //                     this.showIframeSrcPopup(allIframes[i].src);
-                //                     return;
-                //                 }
-                //             }
-                //         }
-                //     }
-                // } else {
-                //     this.showNotification('Second element not found', 'error');
-                // }
             } else {
                 this.showNotification('First element not found', 'error');
             }
@@ -214,6 +218,7 @@ class FacebookPostHeaderExtension {
             this.showNotification('Error occurred during extraction', 'error');
         }
     }
+
 
     /**
      * Shows a popup with the extracted iframe src
@@ -246,7 +251,6 @@ class FacebookPostHeaderExtension {
         // Style the popup
         popup.style.cssText = `
             position: fixed;
-            top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             background: white;
