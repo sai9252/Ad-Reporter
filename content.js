@@ -134,22 +134,13 @@ class FacebookPostHeaderExtension {
                 const realClick = new MouseEvent('click', { bubbles: true, cancelable: true, view: window });
                 firstElement.dispatchEvent(realClick);
                 console.log('Clicked first element');
-                this.showNotification('Step 1 completed', 'success');
-                await this.delay(1000);
+                this.showNotification('Loading options menu...', 'info');
 
-                // Wait for menu to appear after the click before this search
-                const allElements = document.querySelectorAll('*');
-                let hideAdElement = null;
-                allElements.forEach((el) => {
-                    if (
-                        el.innerText &&
-                        el.innerText.trim().toLowerCase().includes('hide ad')
-                    ) {
-                        hideAdElement = el;
-                    }
-                });
+                // Wait for menu to appear with polling mechanism
+                const hideAdElement = await this.waitForHideAdElement(5000); // Wait up to 5 seconds
 
                 if (hideAdElement) {
+                    this.showNotification('Menu loaded successfully', 'success');
                     console.log('Found Hide ad element:', hideAdElement);
 
                     // Traverse up to the relevant parent (replace .parentElement as needed)
@@ -178,7 +169,7 @@ class FacebookPostHeaderExtension {
                         // Find iframe with class "xl1xv1r" and get its src attribute
                         const iframe = document.querySelector('iframe');
                         if (iframe && iframe.src) {
-                            chrome.runtime.sendMessage({ action: "saveLink", link: iframe.src }, response => {
+                            chrome.runtime.sendMessage({ action: "saveLink", link: iframe.src, platform: "FACEBOOK" }, response => {
                                 if (response.success) {
                                     console.log("Saved to Supabase!");
                                 }
@@ -221,7 +212,7 @@ class FacebookPostHeaderExtension {
 
 
     /**
-     * Shows a popup with the extracted iframe src
+     * Shows a popup with the extracted iframe src - not used
      */
     showIframeSrcPopup(iframeSrc) {
         // Remove any existing iframe popup
@@ -336,6 +327,41 @@ class FacebookPostHeaderExtension {
      */
     delay(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    /**
+     * Waits for the "hide ad" element to appear in the DOM with polling
+     * @param {number} timeout - Maximum time to wait in milliseconds
+     * @returns {Promise<Element|null>} The found element or null if timeout
+     */
+    async waitForHideAdElement(timeout = 5000) {
+        const startTime = Date.now();
+        const pollInterval = 200; // Check every 200ms
+
+        while (Date.now() - startTime < timeout) {
+            const allElements = document.querySelectorAll('*');
+            let hideAdElement = null;
+            
+            allElements.forEach((el) => {
+                if (
+                    el.innerText &&
+                    el.innerText.trim().toLowerCase().includes('hide ad')
+                ) {
+                    hideAdElement = el;
+                }
+            });
+
+            if (hideAdElement) {
+                console.log('Found "hide ad" element after', Date.now() - startTime, 'ms');
+                return hideAdElement;
+            }
+
+            // Wait before next poll
+            await this.delay(pollInterval);
+        }
+
+        console.log('Timeout waiting for "hide ad" element after', timeout, 'ms');
+        return null;
     }
 
     /**

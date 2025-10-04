@@ -11,15 +11,13 @@ chrome.runtime.onInstalled.addListener(() => {
     console.log('Facebook Post Extension installed');
 });
 
-
-
 // Handle messages from content script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     (async () => {
         if (request.action === "saveLink" && request.link) {
             const { data, error } = await supabase
                 .from("Link")
-                .insert([{ url: request.link }]);
+                .insert([{ url: request.link, platform: request.platform || "UNKNOWN" }]);
             if (error) {
                 sendResponse({ success: false, error });
             } else {
